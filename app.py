@@ -1,11 +1,18 @@
 import os
 from flask import Flask, request, jsonify
 
+print("🚀 APP STARTED")
+
 # --------------------------------------------------
 # Runtime bootstrap for GeoTIFF landcover data
 # --------------------------------------------------
 from geo.bootstrap_landcover import ensure_landcover_data
+
+print("📡 STARTING LANDCOVER BOOTSTRAP")
+
 ensure_landcover_data()
+
+print("✅ LANDCOVER BOOTSTRAP COMPLETE")
 
 # --------------------------------------------------
 # Core imports (unchanged logic)
@@ -15,9 +22,13 @@ from geo.arable_classifier import is_arable_land
 from engine.rule_engine import evaluate_rules
 from engine.erosion_risk_engine import compute_erosion_risk
 
+print("✅ CORE IMPORTS COMPLETE")
+
 RULES_FILE = "rules/icar_table_4_1_mechanical_measures.json"
 
 app = Flask(__name__)
+
+print("✅ FLASK APP CREATED")
 
 
 # --------------------------------------------------
@@ -125,6 +136,8 @@ def analyze():
 # Render-compatible server start
 # --------------------------------------------------
 if __name__ == "__main__":
+    print("🚀 STARTING FLASK SERVER")
+
     app.run(
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 10000))
