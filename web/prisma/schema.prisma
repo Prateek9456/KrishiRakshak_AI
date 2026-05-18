@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model analysis_requests {
+  id                   Int      @id @default(autoincrement())
+  user_id              Int
+  latitude             Float    @db.Float
+  longitude            Float    @db.Float
+  land_use             String   @db.VarChar(64)
+  backend_status       String?  @db.VarChar(32)
+  response_json        Json
+  created_at           DateTime @db.DateTime(0)
+  recommendation_mode  String?  @db.VarChar(32)
+  recommended_measures Json?
+  erosion_risk_level   String?  @db.VarChar(32)
+  erosion_risk_score   Float?   @db.Float
+  users                users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "analysis_requests_ibfk_1")
+
+  @@index([land_use], map: "ix_analysis_requests_land_use")
+  @@index([user_id], map: "ix_analysis_requests_user_id")
+}
+
+model user_sessions {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  session_token_hash String   @unique(map: "ix_user_sessions_session_token_hash") @db.VarChar(64)
+  auth_provider      String   @db.VarChar(64)
+  started_at         DateTime @db.DateTime(0)
+  last_seen_at       DateTime @db.DateTime(0)
+  users              users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_sessions_ibfk_1")
+
+  @@index([user_id], map: "ix_user_sessions_user_id")
+}
+
+model users {
+  id                Int                 @id @default(autoincrement())
+  google_sub        String              @unique(map: "ix_users_google_sub") @db.VarChar(255)
+  email             String              @unique(map: "ix_users_email") @db.VarChar(320)
+  name              String?             @db.VarChar(255)
+  picture_url       String?             @db.Text
+  created_at        DateTime            @db.DateTime(0)
+  updated_at        DateTime            @db.DateTime(0)
+  last_login_at     DateTime?           @db.DateTime(0)
+  analysis_requests analysis_requests[]
+  user_sessions     user_sessions[]
+}

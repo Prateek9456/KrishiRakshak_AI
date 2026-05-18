@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 .pytest_cache/
+frontend/.streamlit/secrets.toml
 
 # Local raster data (DO NOT COMMIT)
 data/landcover/*.tif
