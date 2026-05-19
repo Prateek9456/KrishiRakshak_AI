@@ -13,4 +13,4 @@ def fetch_soil_drainage(slope_percent, rainfall_mm):
         return "MODERATE"
 
     # Sloping land drains well
-    return "GOOD"
+    return "WELL_DRAINED"

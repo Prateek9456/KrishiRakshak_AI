@@ -169,6 +169,24 @@ export default function AnalysisResults({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
                     {
+                      label: "Latitude",
+                      value:
+                        result.input?.lat != null
+                          ? result.input.lat.toFixed(7)
+                          : "Unknown",
+                    },
+                    {
+                      label: "Longitude",
+                      value:
+                        result.input?.lon != null
+                          ? result.input.lon.toFixed(7)
+                          : "Unknown",
+                    },
+                    {
+                      label: "Crop / Land Use",
+                      value: result.input?.land_use || result.factors?.land_use || "Unknown",
+                    },
+                    {
                       label: "Rainfall",
                       value: `${result.factors?.rainfall_mm ?? 0} mm`,
                     },
@@ -183,6 +201,14 @@ export default function AnalysisResults({
                     {
                       label: "Drainage",
                       value: result.factors?.drainage || "Unknown",
+                    },
+                    {
+                      label: "Rule Mode",
+                      value: result.mechanical_measures?.mode || "Unknown",
+                    },
+                    {
+                      label: "Risk Score",
+                      value: String(result.erosion_risk?.score ?? "Unknown"),
                     },
                   ].map((metric) => (
                     <div

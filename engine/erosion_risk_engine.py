@@ -48,7 +48,7 @@ def compute_erosion_risk(factors):
     # -----------------------
     soil_depth_risk_map = {
         "DEEP": 0.2,
-        "MODERATE": 0.5,
+        "MEDIUM": 0.5,
         "SHALLOW": 0.8
     }
     soil_risk = soil_depth_risk_map.get(
@@ -59,7 +59,7 @@ def compute_erosion_risk(factors):
     # Drainage risk
     # -----------------------
     drainage_risk_map = {
-        "GOOD": 0.3,
+        "WELL_DRAINED": 0.3,
         "MODERATE": 0.5,
         "POOR": 0.8
     }
