@@ -2,7 +2,8 @@
 
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { Loader2, Satellite, MapPin, Shield } from "lucide-react";
 import IcarLogo from "@/components/IcarLogo";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -10,8 +11,35 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const demoEnabled = process.env.NEXT_PUBLIC_AUTH_MODE === "demo";
 
-export default function Login() {
+const AUTH_ERRORS: Record<string, string> = {
+  Configuration:
+    "Server auth is misconfigured. On Render, set NEXTAUTH_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, and GOOGLE_CLIENT_SECRET.",
+  AccessDenied: "Access was denied. Try a different Google account.",
+  Verification: "Sign-in link expired. Please try again.",
+  OAuthSignin: "Could not start Google sign-in. Check OAuth client settings.",
+  OAuthCallback:
+    "Google callback failed. Add https://krishi-rakshak-web.onrender.com/api/auth/callback/google in Google Console.",
+  OAuthAccountNotLinked:
+    "This email is linked to another sign-in method. Use the same provider you used before.",
+  Callback: "Sign-in callback failed. Check Render logs and DATABASE_URL (must not be localhost).",
+  Default: "Sign-in failed. Check Render environment variables and redeploy.",
+};
+
+function LoginErrorBanner({ code }: { code: string | null }) {
+  if (!code) return null;
+  const message = AUTH_ERRORS[code] || AUTH_ERRORS.Default;
+  return (
+    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+      <strong className="block font-bold mb-1">Sign-in error ({code})</strong>
+      {message}
+    </div>
+  );
+}
+
+function LoginContent() {
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("error");
   const [demoName, setDemoName] = useState("Demo User");
   const [demoEmail, setDemoEmail] = useState("demo@example.com");
   const [loading, setLoading] = useState(false);
@@ -74,6 +102,8 @@ export default function Login() {
             <div className="flex justify-center mb-8">
               <IcarLogo size="lg" priority className="drop-shadow-sm" />
             </div>
+
+            <LoginErrorBanner code={authError} />
 
             <div className="text-center mb-8">
               <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#2e7d32] mb-2">
@@ -156,4 +186,17 @@ export default function Login() {
   );
 }
 
+export default function Login() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f4f7f4]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#1b5e20]" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
+}
 

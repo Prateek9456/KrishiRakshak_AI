@@ -84,7 +84,23 @@ npm run db:setup
 npm run db:check
 ```
 
-### 4. Smoke test
+### 4. Verify auth env vars (fixes blank “Error” page after Google login)
+
+In Render → **krishi-rakshak-web** → **Environment**, confirm:
+
+| Variable | Must be |
+|----------|---------|
+| `NEXTAUTH_URL` | `https://krishi-rakshak-web.onrender.com` (exact URL, no trailing slash) |
+| `NEXTAUTH_SECRET` | Any long random string (not empty) |
+| `GOOGLE_CLIENT_ID` | Same client as local |
+| `GOOGLE_CLIENT_SECRET` | Same secret as local |
+| `DATABASE_URL` | **Cloud** MySQL only — `localhost` will fail on Render |
+
+After changing env vars, click **Manual Deploy** → Deploy latest commit.
+
+`localhost` in `DATABASE_URL` cannot work on Render — use PlanetScale/Railway or expose MySQL with a public host.
+
+### 5. Smoke test
 
 - Open `https://YOUR-RENDER-SERVICE.onrender.com/login`
 - Sign in with Google

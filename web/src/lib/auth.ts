@@ -16,54 +16,71 @@ async function upsertUserProfile(params: {
   const { loginId, email, name, pictureUrl, authProvider } = params;
 
   if (!isDatabaseConfigured()) {
+    console.warn("[auth] DATABASE_URL not set — skipping user save");
     return null;
   }
 
-  let dbUser = await prisma.users.findFirst({
-    where: { OR: [{ google_sub: loginId }, { email }] },
-  });
-
   try {
-  if (!dbUser) {
-    dbUser = await prisma.users.create({
-      data: {
-        email,
-        google_sub: loginId,
-        name: name ?? null,
-        picture_url: pictureUrl ?? null,
-        created_at: now,
-        updated_at: now,
-        last_login_at: now,
-      },
+    let dbUser = await prisma.users.findFirst({
+      where: { OR: [{ google_sub: loginId }, { email }] },
     });
-  } else {
-    dbUser = await prisma.users.update({
-      where: { id: dbUser.id },
-      data: {
-        google_sub: loginId,
-        email,
-        name: name ?? dbUser.name,
-        picture_url: pictureUrl ?? dbUser.picture_url,
-        updated_at: now,
-        last_login_at: now,
-      },
-    });
-  }
 
-  await touchUserSession(dbUser.id, authProvider);
-  return dbUser;
+    if (!dbUser) {
+      dbUser = await prisma.users.create({
+        data: {
+          email,
+          google_sub: loginId,
+          name: name ?? null,
+          picture_url: pictureUrl ?? null,
+          created_at: now,
+          updated_at: now,
+          last_login_at: now,
+        },
+      });
+    } else {
+      dbUser = await prisma.users.update({
+        where: { id: dbUser.id },
+        data: {
+          google_sub: loginId,
+          email,
+          name: name ?? dbUser.name,
+          picture_url: pictureUrl ?? dbUser.picture_url,
+          updated_at: now,
+          last_login_at: now,
+        },
+      });
+    }
+
+    await touchUserSession(dbUser.id, authProvider);
+    return dbUser;
   } catch (error) {
     console.error("[auth] MySQL upsert failed:", error);
-    throw error;
+    return null;
   }
 }
 
+function requiredEnv(name: string): string | undefined {
+  const value = process.env[name];
+  if (!value || value.includes("replace-with") || value.includes("your-")) {
+    return undefined;
+  }
+  return value;
+}
+
+const googleId = requiredEnv("GOOGLE_CLIENT_ID");
+const googleSecret = requiredEnv("GOOGLE_CLIENT_SECRET");
+const nextAuthSecret = requiredEnv("NEXTAUTH_SECRET");
+
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    }),
+    ...(googleId && googleSecret
+      ? [
+          GoogleProvider({
+            clientId: googleId,
+            clientSecret: googleSecret,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       id: "demo",
       name: "Demo",
@@ -74,7 +91,8 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!isDemoAuthEnabled()) return null;
 
-        const email = credentials?.email?.trim().toLowerCase() || "demo@example.com";
+        const email =
+          credentials?.email?.trim().toLowerCase() || "demo@example.com";
         const name = credentials?.name?.trim() || "Demo User";
         const loginId = `demo:${email}`;
 
@@ -100,13 +118,18 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "demo") return true;
       if (!user.email) return false;
 
+      const googleSub =
+        (profile as { sub?: string } | undefined)?.sub || user.id;
+
       await upsertUserProfile({
-        loginId: (profile as { sub?: string })?.sub || user.id,
+        loginId: googleSub,
         email: user.email,
         name: user.name,
         pictureUrl: user.image,
         authProvider: "google",
       });
+
+      // Always allow Google sign-in even if DB is down (no history until DB works)
       return true;
     },
     async jwt({ token, user, account }) {
@@ -125,13 +148,17 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (session.user?.email && isDatabaseConfigured()) {
-        const dbUser = await prisma.users.findUnique({
-          where: { email: session.user.email },
-        });
-        if (dbUser) {
-          session.user.id = dbUser.id;
-          session.user.name = dbUser.name ?? session.user.name;
-          session.user.image = dbUser.picture_url ?? session.user.image;
+        try {
+          const dbUser = await prisma.users.findUnique({
+            where: { email: session.user.email },
+          });
+          if (dbUser) {
+            session.user.id = dbUser.id;
+            session.user.name = dbUser.name ?? session.user.name;
+            session.user.image = dbUser.picture_url ?? session.user.image;
+          }
+        } catch (error) {
+          console.error("[auth] session DB lookup failed:", error);
         }
       }
       return session;
@@ -142,5 +169,8 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
+  secret: nextAuthSecret,
+  debug: process.env.NEXTAUTH_DEBUG === "true",
 };
