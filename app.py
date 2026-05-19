@@ -1,20 +1,47 @@
+import os
 from flask import Flask, request, jsonify
 
+print("🚀 APP STARTED")
+
+# --------------------------------------------------
+# Runtime bootstrap for GeoTIFF landcover data
+# --------------------------------------------------
+from geo.bootstrap_landcover import ensure_landcover_data
+
+print("📡 STARTING LANDCOVER BOOTSTRAP")
+
+ensure_landcover_data()
+
+print("✅ LANDCOVER BOOTSTRAP COMPLETE")
+
+# --------------------------------------------------
+# Core imports (unchanged logic)
+# --------------------------------------------------
 from geo.factor_builder import build_factors
 from geo.arable_classifier import is_arable_land
 from engine.rule_engine import evaluate_rules
 from engine.erosion_risk_engine import compute_erosion_risk
 
+print("✅ CORE IMPORTS COMPLETE")
+
 RULES_FILE = "rules/icar_table_4_1_mechanical_measures.json"
 
 app = Flask(__name__)
 
+print("✅ FLASK APP CREATED")
 
+
+# --------------------------------------------------
+# Health check (does NOT trigger raster logic)
+# --------------------------------------------------
 @app.route("/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "ok"}), 200
 
 
+# --------------------------------------------------
+# Main analysis endpoint
+# --------------------------------------------------
 @app.route("/analyze", methods=["POST"])
 def analyze():
     data = request.get_json(silent=True)
@@ -45,7 +72,7 @@ def analyze():
     )
 
     # -----------------------------
-    # Arability check (LOCKED)
+    # Arability check (EARLY EXIT)
     # -----------------------------
     is_arable, reason = is_arable_land(
         lat=lat,
@@ -56,8 +83,8 @@ def analyze():
     if not is_arable:
         return jsonify({
             "status": "NON_ARABLE",
-            "reason": reason,
             "message": "System works only for arable agricultural land",
+            "reason": reason,
             "input": {
                 "lat": lat,
                 "lon": lon,
@@ -66,12 +93,11 @@ def analyze():
         }), 200
 
     # -----------------------------
-    # ICAR rules
+    # ICAR mechanical rules
     # -----------------------------
     mechanical_measures = evaluate_rules(
-    factors=factors,
-    rule_file=RULES_FILE
-
+        factors=factors,
+        rule_file=RULES_FILE
     )
 
     # -----------------------------
@@ -85,7 +111,7 @@ def analyze():
     })
 
     # -----------------------------
-    # Final response (MANUAL SERIALIZATION)
+    # Final response (LOCKED FORMAT)
     # -----------------------------
     return jsonify({
         "status": "OK",
@@ -106,10 +132,13 @@ def analyze():
     }), 200
 
 
+# --------------------------------------------------
+# Render-compatible server start
+# --------------------------------------------------
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    print("🚀 STARTING FLASK SERVER")
 
-
-
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000))
+    )

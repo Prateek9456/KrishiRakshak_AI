@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "leaflet/dist/leaflet.css";
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  z-index: 10;
+}
+
+.swc-pin-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.swc-pin-dot {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-radius: 50%;
+  background: #005a32;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #005a32, 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.leaflet-container.cursor-crosshair {
+  cursor: crosshair;
+}
+
+@layer components {
+  .swc-hero {
+    @apply border border-stone-200 rounded-lg p-6 sm:p-8 bg-gradient-to-r from-white to-[#f0f4f1] border-l-[6px] border-l-[#005a32] shadow-sm;
+  }
+
+  .swc-kicker {
+    @apply text-stone-500 uppercase text-xs font-bold tracking-widest mb-1;
+  }
+
+  .swc-grid {
+    @apply grid grid-cols-1 sm:grid-cols-3 gap-3;
+  }
+
+  .swc-step {
+    @apply border border-stone-200 rounded-lg p-3.5 bg-[#f0f4f1]/90;
+  }
+
+  .swc-step strong {
+    @apply text-stone-900 block text-sm;
+  }
+
+  .swc-step span {
+    @apply text-stone-500 text-sm mt-0.5 block;
+  }
+}

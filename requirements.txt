@@ -1,6 +1,5 @@
-requests
-python-dotenv
-flask==3.0.0
-flask-cors
-numpy
-pillow
+flask>=2.3
+requests>=2.31
+numpy>=1.24
+rasterio>=1.3
+pillow>=9.5
