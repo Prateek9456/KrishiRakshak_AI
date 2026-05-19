@@ -1,0 +1,39 @@
+# Render Blueprint — deploy the Next.js frontend (Flask API stays on your existing Render service)
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: krishi-rakshak-web
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: web
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: BACKEND_URL
+        value: https://swc-ai-engine-clean.onrender.com
+      - key: ANALYZE_TIMEOUT_SECONDS
+        value: "240"
+      - key: HEALTH_TIMEOUT_SECONDS
+        value: "60"
+      - key: HEALTH_RETRIES
+        value: "3"
+      - key: AUTH_MODE
+        value: google
+      - key: NEXT_PUBLIC_AUTH_MODE
+        value: google
+      # Set these in the Render dashboard (Secrets) before first deploy:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

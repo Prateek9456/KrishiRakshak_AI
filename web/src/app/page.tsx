@@ -4,27 +4,29 @@ import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Leaf,
   LogOut,
   MapPin,
   Navigation,
   Loader2,
-  Activity,
-  Sprout,
+  Activity
 } from "lucide-react";
 import Image from "next/image";
+import IcarLogo from "@/components/IcarLogo";
 import MapLoader from "@/components/MapLoader";
 import CoordinateInputs from "@/components/CoordinateInputs";
 import AnalysisResults from "@/components/AnalysisResults";
 import HistoryPanel from "@/components/HistoryPanel";
+import LanguageToggle from "@/components/LanguageToggle";
 import { LAND_USE_OPTIONS } from "@/lib/constants";
 import type { AnalyzeResponse, HistoryItem } from "@/lib/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type LocationMode = "gps" | "pin";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
@@ -43,28 +45,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
-  const [showRaw, setShowRaw] = useState(false);
 
   const [backendOk, setBackendOk] = useState<boolean | null>(null);
   const [healthChecking, setHealthChecking] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [dbConnected, setDbConnected] = useState(true);
-  const [dbStats, setDbStats] = useState<{
-    users: number;
-    analyses: number;
-  } | null>(null);
 
   const loadDbStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/db/status");
       const data = await res.json();
       setDbConnected(data.connected === true);
-      if (data.stats) {
-        setDbStats({
-          users: data.stats.users,
-          analyses: data.stats.analyses,
-        });
-      }
     } catch {
       setDbConnected(false);
     }
@@ -188,23 +179,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7f5] flex flex-col">
-      <nav className="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-[#f5f7f5] flex flex-col font-sans">
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-stone-200/50 sticky top-0 z-50 shadow-sm transition-all">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <Image
-                  src="/images/icar-logo.svg"
-                  alt="ICAR"
-                  width={120}
-                  height={36}
-                  className="h-8 w-auto hidden md:block"
-                />
-                <div className="flex items-center gap-2 text-[#1b5e20]">
-                  <Leaf className="h-6 w-6 md:hidden" />
-                  <span className="font-bold text-base sm:text-lg tracking-tight">
-                    SWC-AI-ENGINE
+                <div className="flex items-center gap-3 text-[#1b5e20] bg-[#2e7d32]/10 px-3 py-2 rounded-xl">
+                  <IcarLogo size="xs" />
+                  <span className="font-extrabold text-base sm:text-lg tracking-tight hidden sm:block">
+                    KrishiRakshak AI
                   </span>
                 </div>
               </div>
@@ -213,12 +197,12 @@ export default function Dashboard() {
                 onClick={() => checkHealth()}
                 disabled={healthChecking}
                 title="Click to re-check engine connection"
-                className={`hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${
+                className={`hidden lg:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
                   healthChecking || backendOk === null
-                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                    ? "bg-amber-50 text-amber-800 border-amber-200 shadow-sm"
                     : backendOk
-                      ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                      : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm hover:bg-emerald-100"
+                      : "bg-red-50 text-red-700 border-red-200 shadow-sm hover:bg-red-100"
                 }`}
               >
                 {healthChecking ? (
@@ -227,37 +211,41 @@ export default function Dashboard() {
                   <Activity className="h-3 w-3" />
                 )}
                 {healthChecking
-                  ? "Waking engine…"
+                  ? t.dashboard.wakingEngine
                   : backendOk === null
-                    ? "Checking…"
+                    ? t.dashboard.checking
                     : backendOk
-                      ? "Backend online"
-                      : "Backend offline — retry"}
+                      ? t.dashboard.backendOnline
+                      : t.dashboard.backendOffline}
               </button>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              <LanguageToggle />
+              
+              <div className="h-8 w-px bg-stone-200 hidden sm:block" />
+              
               {session.user?.image && (
                 <Image
                   src={session.user.image}
                   alt=""
-                  width={32}
-                  height={32}
-                  className="rounded-full ring-2 ring-[#005a32]/20"
+                  width={36}
+                  height={36}
+                  className="rounded-full ring-2 ring-[#005a32]/20 shadow-sm"
                 />
               )}
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-stone-800">
+                <p className="text-sm font-bold text-stone-800">
                   {session.user?.name}
                 </p>
-                <p className="text-xs text-stone-500">{session.user?.email}</p>
+                <p className="text-xs text-stone-500 font-medium">{session.user?.email}</p>
               </div>
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="text-stone-500 hover:text-stone-700 flex items-center gap-1 text-sm font-medium transition-colors ml-1"
+                className="text-stone-500 hover:text-red-600 flex items-center gap-1.5 text-sm font-semibold transition-colors ml-2 bg-stone-100 hover:bg-red-50 px-3 py-1.5 rounded-lg"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign out</span>
+                <span className="hidden sm:inline">{t.dashboard.signOut}</span>
               </button>
             </div>
           </div>
@@ -265,64 +253,79 @@ export default function Dashboard() {
       </nav>
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <section className="swc-hero mb-8">
-          <p className="swc-kicker">Soil & Water Conservation</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#003e21] tracking-tight">
-            Field intelligence for ICAR-aligned erosion control
-          </h1>
-          <p className="text-stone-600 mt-2 max-w-3xl leading-relaxed">
-            Capture live GPS or drop a map pin, select your crop or land-cover
-            type, and receive conservation measures backed by your SWC analysis
-            engine.
-          </p>
-          <div className="swc-grid mt-5">
-            <div className="swc-step">
-              <strong>1. Locate</strong>
-              <span>Use GPS or click the map to set coordinates.</span>
-            </div>
-            <div className="swc-step">
-              <strong>2. Context</strong>
-              <span>Select crop or land-cover from ICAR categories.</span>
-            </div>
-            <div className="swc-step">
-              <strong>3. Analyze</strong>
-              <span>Get erosion risk and recommended measures.</span>
+        <section className="relative rounded-2xl p-6 sm:p-12 mb-8 overflow-hidden shadow-lg border border-stone-200/50 group min-h-[400px] flex flex-col justify-center">
+          <Image
+            src="/images/indian_agriculture_hero.png"
+            alt="Indian Agriculture"
+            fill
+            className="object-cover transition-transform duration-[10000ms] group-hover:scale-105"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent sm:w-2/3" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent sm:hidden" />
+          
+          <div className="relative z-10 max-w-2xl">
+            <p className="text-[#005a32] uppercase text-xs font-bold tracking-widest mb-2 flex items-center gap-2">
+              <IcarLogo size="xs" />
+              {t.dashboard.heroKicker}
+            </p>
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-stone-900 tracking-tight max-w-2xl leading-tight">
+              {t.dashboard.heroTitle}
+            </h1>
+            <p className="text-stone-600 mt-4 max-w-3xl leading-relaxed font-medium">
+              {t.dashboard.heroDesc}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+              <div className="bg-white/80 backdrop-blur border border-stone-200/80 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <strong className="text-stone-900 block text-sm font-bold">{t.dashboard.step1Title}</strong>
+                <span className="text-stone-500 text-sm mt-1 block font-medium">{t.dashboard.step1Desc}</span>
+              </div>
+              <div className="bg-white/80 backdrop-blur border border-stone-200/80 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <strong className="text-stone-900 block text-sm font-bold">{t.dashboard.step2Title}</strong>
+                <span className="text-stone-500 text-sm mt-1 block font-medium">{t.dashboard.step2Desc}</span>
+              </div>
+              <div className="bg-white/80 backdrop-blur border border-stone-200/80 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <strong className="text-stone-900 block text-sm font-bold">{t.dashboard.step3Title}</strong>
+                <span className="text-stone-500 text-sm mt-1 block font-medium">{t.dashboard.step3Desc}</span>
+              </div>
             </div>
           </div>
         </section>
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           <div className="xl:col-span-3 space-y-6">
-            <div className="bg-white p-5 sm:p-6 rounded-xl border border-stone-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-[#005a32]" />
-                  Field Location
+            <div className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-bold text-stone-900 flex items-center gap-2">
+                  <div className="bg-[#e8f5e9] p-2 rounded-lg">
+                    <MapPin className="h-5 w-5 text-[#2e7d32]" />
+                  </div>
+                  {t.dashboard.fieldLocation}
                 </h2>
-                <div className="flex rounded-lg border border-stone-200 p-0.5 bg-stone-50">
+                <div className="flex rounded-xl border border-stone-200 p-1 bg-stone-50/50">
                   <button
                     type="button"
                     onClick={() => setLocationMode("gps")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300 ${
                       locationMode === "gps"
-                        ? "bg-white text-[#005a32] shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
+                        ? "bg-white text-[#2e7d32] shadow-sm border border-stone-200/50"
+                        : "text-stone-500 hover:text-stone-800"
                     }`}
                   >
                     <Navigation className="h-4 w-4" />
-                    Live GPS
+                    {t.dashboard.liveGps}
                   </button>
                   <button
                     type="button"
                     onClick={() => setLocationMode("pin")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300 ${
                       locationMode === "pin"
-                        ? "bg-white text-[#005a32] shadow-sm"
-                        : "text-stone-600 hover:text-stone-900"
+                        ? "bg-white text-[#2e7d32] shadow-sm border border-stone-200/50"
+                        : "text-stone-500 hover:text-stone-800"
                     }`}
                   >
                     <MapPin className="h-4 w-4" />
-                    Map Pin
+                    {t.dashboard.mapPin}
                   </button>
                 </div>
               </div>
@@ -333,164 +336,165 @@ export default function Dashboard() {
                     type="button"
                     onClick={requestGps}
                     disabled={gpsLoading}
-                    className="inline-flex items-center gap-2 text-sm font-medium text-[#005a32] border border-[#005a32]/30 rounded-md px-3 py-1.5 hover:bg-[#f0f4f1] disabled:opacity-50"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[#005a32] bg-[#f0f4f1] border border-[#005a32]/20 rounded-xl px-4 py-2 hover:bg-[#e6efe9] disabled:opacity-50 transition-colors"
                   >
                     {gpsLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Navigation className="h-4 w-4" />
                     )}
-                    Refresh GPS
+                    {t.dashboard.refreshGps}
                   </button>
                   {gpsError && (
-                    <p className="text-sm text-red-600">{gpsError}</p>
+                    <p className="text-sm text-red-600 font-medium">{gpsError}</p>
                   )}
                 </div>
               )}
 
-              <p className="text-sm text-[#1b5e20] bg-[#f0f7f2] border border-[#005a32]/20 rounded-md px-3 py-2 mb-3">
-                <strong>Accuracy:</strong> Zoom to level 17+ (field scale). Use{" "}
-                <strong>Street (reference)</strong> to align your pin, then
-                switch to satellite if needed. Drag the pin for fine adjustment.
-                Browser GPS is often ±30–100 m — prefer map pin for ICAR plots.
+              <p className="text-sm text-[#1b5e20] bg-[#e8f5e9]/60 border border-[#2e7d32]/20 rounded-xl px-4 py-3 mb-4 font-medium leading-relaxed">
+                {t.dashboard.accuracyNotice}
               </p>
 
               {locationMode === "gps" &&
                 accuracy != null &&
                 accuracy > 30 && (
-                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-3">
-                    GPS accuracy is ±{accuracy.toFixed(0)} m. For reliable
-                    results, switch to <strong>Map Pin</strong> and place the
-                    field center manually.
+                  <p className="text-sm text-amber-800 bg-amber-50/80 border border-amber-200/50 rounded-xl px-4 py-3 mb-4 font-medium">
+                    {t.dashboard.gpsAccuracyWarning.replace("{accuracy}", accuracy.toFixed(0))}
                   </p>
                 )}
 
-              <MapLoader
-                lat={lat}
-                lon={lon}
-                flyTo={flyTo}
-                onLocationChange={(newLat, newLon) => {
-                  setAccuracy(null);
-                  setLocation(
-                    newLat,
-                    newLon,
-                    locationMode === "gps" ? "Live GPS" : "Map Pin"
-                  );
-                }}
-              />
+              <div className="rounded-xl overflow-hidden shadow-inner border border-stone-200/80">
+                <MapLoader
+                  lat={lat}
+                  lon={lon}
+                  flyTo={flyTo}
+                  onLocationChange={(newLat, newLon) => {
+                    setAccuracy(null);
+                    setLocation(
+                      newLat,
+                      newLon,
+                      locationMode === "gps" ? t.dashboard.liveGps : t.dashboard.mapPin
+                    );
+                  }}
+                />
+              </div>
 
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <div className="bg-stone-50 p-3 rounded-lg border border-stone-100">
-                  <span className="text-xs font-semibold text-stone-500 uppercase">
-                    Latitude
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <div className="bg-stone-50/80 p-4 rounded-xl border border-stone-200/60 shadow-sm">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                    {t.dashboard.latitude}
                   </span>
-                  <p className="font-mono font-medium text-stone-900 mt-0.5">
+                  <p className="font-mono font-bold text-stone-900 mt-1">
                     {lat != null ? lat.toFixed(7) : "—"}
                   </p>
                 </div>
-                <div className="bg-stone-50 p-3 rounded-lg border border-stone-100">
-                  <span className="text-xs font-semibold text-stone-500 uppercase">
-                    Longitude
+                <div className="bg-stone-50/80 p-4 rounded-xl border border-stone-200/60 shadow-sm">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                    {t.dashboard.longitude}
                   </span>
-                  <p className="font-mono font-medium text-stone-900 mt-0.5">
+                  <p className="font-mono font-bold text-stone-900 mt-1">
                     {lon != null ? lon.toFixed(7) : "—"}
                   </p>
                 </div>
-                <div className="bg-stone-50 p-3 rounded-lg border border-stone-100">
-                  <span className="text-xs font-semibold text-stone-500 uppercase">
-                    Accuracy
+                <div className="bg-stone-50/80 p-4 rounded-xl border border-stone-200/60 shadow-sm">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                    {t.dashboard.accuracy}
                   </span>
-                  <p className="font-medium text-stone-900 mt-0.5">
+                  <p className="font-bold text-stone-900 mt-1">
                     {accuracy != null ? `±${accuracy.toFixed(0)} m` : "—"}
                   </p>
                 </div>
-                <div className="bg-stone-50 p-3 rounded-lg border border-stone-100">
-                  <span className="text-xs font-semibold text-stone-500 uppercase">
-                    Source
+                <div className="bg-stone-50/80 p-4 rounded-xl border border-stone-200/60 shadow-sm">
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                    {t.dashboard.source}
                   </span>
-                  <p className="font-medium text-stone-900 mt-0.5 truncate">
+                  <p className="font-bold text-stone-900 mt-1 truncate">
                     {locationSource || "—"}
                   </p>
                 </div>
               </div>
 
-              <CoordinateInputs
-                lat={lat}
-                lon={lon}
-                onChange={(newLat, newLon) =>
-                  setLocation(newLat, newLon, locationSource || "Manual")
-                }
-              />
+              <div className="mt-6">
+                <CoordinateInputs
+                  lat={lat}
+                  lon={lon}
+                  onChange={(newLat, newLon) =>
+                    setLocation(newLat, newLon, locationSource || "Manual")
+                  }
+                />
+              </div>
             </div>
 
-            {dbConnected && dbStats && (
-              <p className="text-xs text-green-800 bg-green-50 border border-green-200 rounded-md px-3 py-2">
-                MySQL connected — {dbStats.users} user(s), {dbStats.analyses}{" "}
-                saved analyses. View in Workbench:{" "}
-                <code className="font-mono">swc_ai_engine.analysis_history_view</code>
-              </p>
-            )}
-            {!dbConnected && (
-              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                MySQL not reachable. Check DATABASE_URL in web/.env and run{" "}
-                <code className="font-mono">npm run db:check</code>
-              </p>
-            )}
 
-            <div className="bg-white p-5 sm:p-6 rounded-xl border border-stone-200 shadow-sm">
-              <h2 className="text-lg font-semibold text-stone-900 mb-4 flex items-center gap-2">
-                <Sprout className="h-5 w-5 text-[#005a32]" />
-                Land Context & Analysis
+
+            <div className="bg-white p-6 rounded-2xl border border-stone-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[#2e7d32]" />
+              
+              <h2 className="text-xl font-bold text-stone-900 mb-6 flex items-center gap-3 pl-2">
+                <IcarLogo size="xs" />
+                {t.dashboard.landContext}
               </h2>
-              <label
-                htmlFor="land-use"
-                className="block text-sm font-medium text-stone-700 mb-2"
-              >
-                Crop or land-cover type
-              </label>
-              <select
-                id="land-use"
-                value={landUse}
-                onChange={(e) => setLandUse(e.target.value)}
-                className="w-full rounded-md border border-stone-300 py-2.5 pl-3 pr-10 text-sm focus:border-[#005a32] focus:outline-none focus:ring-1 focus:ring-[#005a32]"
-              >
-                {Object.entries(LAND_USE_OPTIONS).map(([group, options]) => (
-                  <optgroup key={group} label={group}>
-                    {options.map((opt) => (
-                      <option key={opt.code} value={opt.code}>
-                        {opt.label}
-                      </option>
+              
+              <div className="pl-2">
+                <label
+                  htmlFor="land-use"
+                  className="block text-sm font-bold text-stone-700 mb-2"
+                >
+                  {t.dashboard.cropTypeLabel}
+                </label>
+                <div className="relative">
+                  <select
+                    id="land-use"
+                    value={landUse}
+                    onChange={(e) => setLandUse(e.target.value)}
+                    className="w-full appearance-none rounded-xl border border-stone-200/80 bg-stone-50/50 py-3.5 pl-4 pr-10 text-sm font-medium text-stone-800 focus:border-[#2e7d32] focus:outline-none focus:ring-2 focus:ring-[#2e7d32]/20 transition-all shadow-sm"
+                  >
+                    {Object.entries(LAND_USE_OPTIONS).map(([group, options]) => (
+                      <optgroup key={group} label={group} className="font-bold text-stone-500">
+                        {options.map((opt) => (
+                          <option key={opt.code} value={opt.code} className="font-medium text-stone-900">
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
-                  </optgroup>
-                ))}
-              </select>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-500">
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={handleAnalyze}
-                disabled={lat == null || lon == null || loading}
-                className="mt-6 w-full bg-[#005a32] text-white font-semibold py-3 px-4 rounded-md shadow-sm hover:bg-[#003e21] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {loading ? "Analyzing field…" : "Analyze Land"}
-              </button>
-              {backendOk === false && !healthChecking && (
-                <p className="text-xs text-amber-700 mt-2 text-center">
-                  Engine may be waking up (Render free tier). You can still
-                  analyze — first run may take 1–2 minutes. Click the status
-                  badge above to retry.
-                </p>
-              )}
-              {analyzeError && !result?.status && (
-                <p className="text-sm text-red-600 mt-3">{analyzeError}</p>
-              )}
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  disabled={lat == null || lon == null || loading}
+                  className="mt-8 w-full group relative overflow-hidden bg-gradient-to-r from-[#1b5e20] to-[#005a32] text-white font-bold py-4 px-4 rounded-xl shadow-md hover:shadow-lg hover:shadow-[#005a32]/20 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <div className="absolute inset-0 bg-white/20 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-700" />
+                  {loading && <Loader2 className="h-5 w-5 animate-spin relative z-10" />}
+                  <span className="relative z-10 text-base tracking-wide">
+                    {loading ? t.dashboard.analyzingBtn : t.dashboard.analyzeBtn}
+                  </span>
+                </button>
+                
+                {backendOk === false && !healthChecking && (
+                  <p className="text-xs font-medium text-amber-700 mt-3 text-center bg-amber-50 p-2 rounded-lg border border-amber-100">
+                    {t.dashboard.engineWaking}
+                  </p>
+                )}
+                {analyzeError && !result?.status && (
+                  <p className="text-sm font-medium text-red-600 mt-4 bg-red-50 p-3 rounded-lg border border-red-100 text-center">
+                    {analyzeError}
+                  </p>
+                )}
+              </div>
             </div>
 
             {result && (
               <AnalysisResults
                 result={result}
-                showRaw={showRaw}
-                onToggleRaw={() => setShowRaw((v) => !v)}
               />
             )}
           </div>

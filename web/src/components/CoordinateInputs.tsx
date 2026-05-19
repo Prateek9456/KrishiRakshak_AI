@@ -1,5 +1,7 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface CoordinateInputsProps {
   lat: number | null;
   lon: number | null;
@@ -16,15 +18,18 @@ export default function CoordinateInputs({
   lon,
   onChange,
 }: CoordinateInputsProps) {
+  const { t, language } = useLanguage();
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 p-3 rounded-lg border border-[#005a32]/20 bg-[#f0f7f2]">
-      <p className="sm:col-span-2 text-xs text-[#1b5e20] font-medium">
-        Fine-tune coordinates (7 decimal places ≈ 1 cm). Drag the pin or type
-        exact values — required for accurate ICAR field analysis.
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 p-4 rounded-xl border border-[#2e7d32]/20 bg-[#e8f5e9]/50 shadow-inner">
+      <p className="sm:col-span-2 text-xs text-[#1b5e20] font-medium leading-relaxed">
+        {language === "hi"
+          ? "निर्देशांकों को ठीक करें (7 दशमलव स्थान ≈ 1 सेमी)। पिन को खींचें या सटीक मान टाइप करें — सटीक आईसीएआर क्षेत्र विश्लेषण के लिए आवश्यक है।"
+          : "Fine-tune coordinates (7 decimal places ≈ 1 cm). Drag the pin or type exact values — required for accurate ICAR field analysis."}
       </p>
       <div>
-        <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">
-          Latitude (WGS84)
+        <label className="block text-[10px] font-extrabold text-stone-600 uppercase mb-2 tracking-wider">
+          {t.dashboard.latitude} (WGS84)
         </label>
         <input
           type="number"
@@ -37,12 +42,12 @@ export default function CoordinateInputs({
             if (la != null && lon != null) onChange(la, lon);
           }}
           placeholder="e.g. 28.4575790"
-          className="w-full font-mono text-sm rounded-md border border-stone-300 px-2 py-1.5 focus:border-[#005a32] focus:ring-1 focus:ring-[#005a32]"
+          className="w-full font-mono text-sm rounded-lg border border-stone-200/80 px-3 py-2.5 focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 shadow-sm transition-all bg-white"
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-stone-600 uppercase mb-1">
-          Longitude (WGS84)
+        <label className="block text-[10px] font-extrabold text-stone-600 uppercase mb-2 tracking-wider">
+          {t.dashboard.longitude} (WGS84)
         </label>
         <input
           type="number"
@@ -55,7 +60,7 @@ export default function CoordinateInputs({
             if (lat != null && lo != null) onChange(lat, lo);
           }}
           placeholder="e.g. 77.5166510"
-          className="w-full font-mono text-sm rounded-md border border-stone-300 px-2 py-1.5 focus:border-[#005a32] focus:ring-1 focus:ring-[#005a32]"
+          className="w-full font-mono text-sm rounded-lg border border-stone-200/80 px-3 py-2.5 focus:border-[#2e7d32] focus:ring-2 focus:ring-[#2e7d32]/20 shadow-sm transition-all bg-white"
         />
       </div>
     </div>

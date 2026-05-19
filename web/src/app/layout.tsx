@@ -6,9 +6,13 @@ import { Providers } from "@/components/Providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SWC-AI-ENGINE | ICAR Decision Support",
+  title: "KrishiRakshak AI | ICAR Decision Support",
   description:
-    "Soil and water conservation decision support for ICAR — precision field location and erosion control measures",
+    "Soil and water conservation decision support for ICAR — precision field location and erosion control measures.",
+  icons: {
+    icon: "/images/icar-logo.png",
+    apple: "/images/icar-logo.png",
+  },
 };
 
 export default function RootLayout({

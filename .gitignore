@@ -12,3 +12,4 @@ data/landcover/**/*.tif
 # OS
 .DS_Store
 Thumbs.db
+.streamlit/secrets.toml
