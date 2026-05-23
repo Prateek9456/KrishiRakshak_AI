@@ -1,13 +1,13 @@
 from geo.sensors.soil_depth_sensor import fetch_soil_depth_class
 
-test_cases = [
-    ("Flat + good drainage", 2.0, "GOOD"),
-    ("Flat + moderate drainage", 4.0, "MODERATE"),
-    ("Moderate slope", 10.0, "GOOD"),
-    ("Steep slope", 18.0, "GOOD"),
-    ("Steep + poor drainage", 20.0, "POOR"),
-]
 
-for name, slope, drainage in test_cases:
-    depth = fetch_soil_depth_class(slope, drainage)
-    print(f"{name}: {depth}")
+def test_soil_depth_uses_icar_slope_thresholds():
+    assert fetch_soil_depth_class(2.0) == "DEEP"
+    assert fetch_soil_depth_class(3.0) == "DEEP"
+    assert fetch_soil_depth_class(4.0) == "MEDIUM"
+    assert fetch_soil_depth_class(15.0) == "MEDIUM"
+    assert fetch_soil_depth_class(18.0) == "SHALLOW"
+
+
+def test_soil_depth_uses_conservative_fallback():
+    assert fetch_soil_depth_class(None) == "SHALLOW"

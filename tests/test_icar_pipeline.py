@@ -7,7 +7,10 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from geo.factor_builder import build_factors
-from engine.rule_engine import recommend_mechanical_measures
+from engine.rule_engine import evaluate_rules
+
+
+RULE_FILE = "rules/icar_table_4_1_mechanical_measures.json"
 
 
 def test_icar_pipeline_basic():
@@ -20,25 +23,20 @@ def test_icar_pipeline_basic():
         lon=78.0322,
         land_use="SMALL_MILLETS",
         overrides={
-            "rainfall": "HIGH",
-            "slope": "STEEP",
+            "rainfall_mm": 900,
+            "slope_percent": 10,
             "soil_depth": "SHALLOW",
             "drainage": "POOR",
         },
     )
 
-    factor_dict = factors.to_dict()
+    assert factors.rainfall_mm == 900
+    assert factors.slope_percent == 10
+    assert factors.soil_depth == "SHALLOW"
+    assert factors.drainage == "POOR"
+    assert factors.land_use == "SMALL_MILLETS"
 
-    assert factor_dict["rainfall"] == "HIGH"
-    assert factor_dict["slope"] == "STEEP"
-    assert factor_dict["soil_depth"] == "SHALLOW"
-    assert factor_dict["drainage"] == "POOR"
-    assert factor_dict["land_use"] == "SMALL_MILLETS"
+    recommendation = evaluate_rules(factors, RULE_FILE)
 
-    recommendation = recommend_mechanical_measures(factors)
-
-    assert recommendation["recommendation_mode"] in {
-        "STRICT_ICAR",
-        "LAND_USE_IGNORED",
-        "NO_MATCH",
-    }
+    assert recommendation["mode"] in {"STRICT", "RELAXED", "NEAREST"}
+    assert recommendation["measures"]
