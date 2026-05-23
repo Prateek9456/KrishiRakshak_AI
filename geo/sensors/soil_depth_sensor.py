@@ -3,7 +3,7 @@
 def fetch_soil_depth_class(slope_percent):
     """
     Returns ICAR soil depth class:
-    DEEP / MODERATE / SHALLOW
+    DEEP / MEDIUM / SHALLOW
 
     Deterministic, ICAR-consistent physiography proxy.
     Uses slope (%) only. Conservative by design.
@@ -19,7 +19,7 @@ def fetch_soil_depth_class(slope_percent):
 
     # ICAR: gently sloping to undulating terrain
     if slope_percent <= 15.0:
-        return "MODERATE"
+        return "MEDIUM"
 
     # ICAR: dissected / steeper terrain
     return "SHALLOW"

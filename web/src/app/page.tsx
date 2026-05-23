@@ -76,7 +76,7 @@ export default function Dashboard() {
   const checkHealth = useCallback(async () => {
     setHealthChecking(true);
     try {
-      const res = await fetch("/api/health", { cache: "no-store" });
+      const res = await fetch("/api/backend-health", { cache: "no-store" });
       setBackendOk(res.ok);
     } catch {
       setBackendOk(false);
@@ -149,7 +149,14 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat, lon, land_use: landUse }),
       });
-      const data: AnalyzeResponse = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      const data: AnalyzeResponse = contentType.includes("application/json")
+        ? await res.json()
+        : {
+            status: "ERROR",
+            message:
+              "Backend returned a non-JSON response. Please redeploy the backend service with the latest fixes.",
+          };
       if (!res.ok) {
         setAnalyzeError(data.message || "Analysis request failed.");
         setResult(data);

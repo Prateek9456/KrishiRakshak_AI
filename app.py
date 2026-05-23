@@ -1,4 +1,5 @@
 import os
+import traceback
 from flask import Flask, request, jsonify
 
 print("🚀 APP STARTED")
@@ -27,6 +28,17 @@ print("✅ CORE IMPORTS COMPLETE")
 RULES_FILE = "rules/icar_table_4_1_mechanical_measures.json"
 
 app = Flask(__name__)
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    print("Unhandled backend error:", error)
+    traceback.print_exc()
+    return jsonify({
+        "status": "ERROR",
+        "message": "Backend analysis failed unexpectedly.",
+        "details": str(error)
+    }), 500
 
 print("✅ FLASK APP CREATED")
 
@@ -60,6 +72,16 @@ def analyze():
         return jsonify({
             "status": "ERROR",
             "message": "lat, lon and land_use are required"
+        }), 400
+
+    try:
+        lat = float(lat)
+        lon = float(lon)
+        land_use = str(land_use).strip().upper()
+    except (TypeError, ValueError):
+        return jsonify({
+            "status": "ERROR",
+            "message": "lat and lon must be numeric coordinates"
         }), 400
 
     # -----------------------------

@@ -31,6 +31,24 @@ def latlon_to_tile(lat, lon, zoom):
     return xtile, ytile
 
 
+def latlon_to_tile_pixel(lat, lon, zoom, tile_size=256):
+    """
+    Convert latitude/longitude to the tile and exact pixel inside that tile.
+    """
+    lat_rad = math.radians(lat)
+    n = 2 ** zoom
+    x = (lon + 180.0) / 360.0 * n
+    y = (
+        1.0 - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi
+    ) / 2.0 * n
+
+    xtile = int(x)
+    ytile = int(y)
+    px = int((x - xtile) * tile_size)
+    py = int((y - ytile) * tile_size)
+    return xtile, ytile, px, py
+
+
 def rgb_to_elevation(r, g, b):
     """
     Decode Mapbox Terrain-RGB pixel to elevation (meters).
@@ -58,7 +76,7 @@ def fetch_slope_percent(lat, lon, zoom=DEFAULT_ZOOM):
     This matches ICAR slope interpretation.
     """
 
-    x, y = latlon_to_tile(lat, lon, zoom)
+    x, y, px, py = latlon_to_tile_pixel(lat, lon, zoom)
 
     url = (
         f"https://api.mapbox.com/v4/mapbox.terrain-rgb/"
@@ -73,7 +91,8 @@ def fetch_slope_percent(lat, lon, zoom=DEFAULT_ZOOM):
         arr = np.array(img)
 
         height, width, _ = arr.shape
-        cx, cy = width // 2, height // 2
+        cx = min(max(px, 2), width - 3)
+        cy = min(max(py, 2), height - 3)
 
         # Pixel resolution in meters (Web Mercator)
         resolution = 156543.03 * math.cos(math.radians(lat)) / (2 ** zoom)

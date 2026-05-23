@@ -57,6 +57,18 @@ function MapResizer() {
   return null;
 }
 
+function MapScale() {
+  const map = useMap();
+  useEffect(() => {
+    const scale = L.control.scale({ imperial: false, metric: true });
+    scale.addTo(map);
+    return () => {
+      scale.remove();
+    };
+  }, [map]);
+  return null;
+}
+
 function PrecisionMarker({
   lat,
   lon,
@@ -144,8 +156,9 @@ export default function FieldMap({
         className="h-full w-full cursor-crosshair"
       >
         <MapResizer />
+        <MapScale />
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Street (reference)">
+          <LayersControl.BaseLayer name="Street (reference)">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -161,7 +174,7 @@ export default function FieldMap({
               maxZoom={MAX_ZOOM}
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Satellite labels">
+          <LayersControl.BaseLayer checked name="Satellite labels">
             <TileLayer
               attribution="Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
