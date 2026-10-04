@@ -3,23 +3,23 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model analysis_requests {
   id                   Int      @id @default(autoincrement())
   user_id              Int
-  latitude             Float    @db.Float
-  longitude            Float    @db.Float
-  land_use             String   @db.VarChar(64)
-  backend_status       String?  @db.VarChar(32)
+  latitude             Float
+  longitude            Float
+  land_use             String
+  backend_status       String?
   response_json        Json
-  created_at           DateTime @db.DateTime(0)
-  recommendation_mode  String?  @db.VarChar(32)
+  created_at           DateTime @default(now())
+  recommendation_mode  String?
   recommended_measures Json?
-  erosion_risk_level   String?  @db.VarChar(32)
-  erosion_risk_score   Float?   @db.Float
+  erosion_risk_level   String?
+  erosion_risk_score   Float?
   users                users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "analysis_requests_ibfk_1")
 
   @@index([land_use], map: "ix_analysis_requests_land_use")
@@ -29,10 +29,10 @@ model analysis_requests {
 model user_sessions {
   id                 Int      @id @default(autoincrement())
   user_id            Int
-  session_token_hash String   @unique(map: "ix_user_sessions_session_token_hash") @db.VarChar(64)
-  auth_provider      String   @db.VarChar(64)
-  started_at         DateTime @db.DateTime(0)
-  last_seen_at       DateTime @db.DateTime(0)
+  session_token_hash String   @unique(map: "ix_user_sessions_session_token_hash")
+  auth_provider      String
+  started_at         DateTime @default(now())
+  last_seen_at       DateTime @default(now())
   users              users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_sessions_ibfk_1")
 
   @@index([user_id], map: "ix_user_sessions_user_id")
@@ -40,13 +40,13 @@ model user_sessions {
 
 model users {
   id                Int                 @id @default(autoincrement())
-  google_sub        String              @unique(map: "ix_users_google_sub") @db.VarChar(255)
-  email             String              @unique(map: "ix_users_email") @db.VarChar(320)
-  name              String?             @db.VarChar(255)
-  picture_url       String?             @db.Text
-  created_at        DateTime            @db.DateTime(0)
-  updated_at        DateTime            @db.DateTime(0)
-  last_login_at     DateTime?           @db.DateTime(0)
+  google_sub        String              @unique(map: "ix_users_google_sub")
+  email             String              @unique(map: "ix_users_email")
+  name              String?
+  picture_url       String?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())
+  last_login_at     DateTime?
   analysis_requests analysis_requests[]
   user_sessions     user_sessions[]
 }

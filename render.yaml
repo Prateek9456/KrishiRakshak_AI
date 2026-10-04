@@ -1,21 +1,42 @@
-# Render Blueprint — deploy the Next.js frontend (Flask API stays on your existing Render service)
-# Docs: https://render.com/docs/blueprint-spec
+databases:
+  - name: krishi-rakshak-db
+    databaseName: krishirakshak
+    user: krishi
+    plan: free
 
 services:
+  - type: web
+    name: krishi-rakshak-api
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+
   - type: web
     name: krishi-rakshak-web
     runtime: node
     region: singapore
     plan: free
     rootDir: web
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma db push && npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "20"
       - key: BACKEND_URL
-        value: https://swc-ai-engine-clean.onrender.com
+        fromService:
+          type: web
+          name: krishi-rakshak-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: krishi-rakshak-db
+          property: connectionString
       - key: ANALYZE_TIMEOUT_SECONDS
         value: "240"
       - key: HEALTH_TIMEOUT_SECONDS
@@ -27,8 +48,6 @@ services:
       - key: NEXT_PUBLIC_AUTH_MODE
         value: google
       # Set these in the Render dashboard (Secrets) before first deploy:
-      - key: DATABASE_URL
-        sync: false
       - key: NEXTAUTH_URL
         sync: false
       - key: NEXTAUTH_SECRET
